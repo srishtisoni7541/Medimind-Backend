@@ -9,6 +9,9 @@ import userRouter from './routes/userRoute.js'
 import doctorReview from './routes/doctorReviewRoutes.js'
 import HospitalReview from './routes/hospitalReviewRoutes.js'
 import  medicalRoutes from './routes/medicalRoutes.js'
+import medicationRoutes from './routes/medicationRoutes.js'
+
+import helmet  from 'helmet'
 const app = express()
 const port = process.env.PORT || 4000
 connectDB()
@@ -17,7 +20,6 @@ connectCloudinary()
 app.use(express.json())
 
 const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
-
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl)
@@ -30,6 +32,8 @@ app.use(cors({
   },
   credentials: true
 }));
+app.use(helmet());
+
 
 app.use('/api/admin', adminRouter)
 app.use('/api/doctor', doctorRouter)
@@ -37,6 +41,7 @@ app.use('/api/user', userRouter)
 app.use('/api/doctor-reviews', doctorReview)
 app.use('/api/hospital-reviews',HospitalReview)
 app.use('/api', medicalRoutes);
+app.use('/api/medications', medicationRoutes);
 app.get('/', (req, res) => {
       res.send('API WORKING')
 })
