@@ -2,7 +2,7 @@ import jwt from 'jsonwebtoken';
 
 const authAdmin = async (req, res, next) => {
     try {
-        const token = req.headers.atoken;
+        const token = req.headers.token;
         if (!token) {
             return res.status(403).json({ success: false, message: "Not Authorized. Login Again" });
         }

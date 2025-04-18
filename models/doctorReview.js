@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 
 const DoctorReviewSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // User who wrote the review
-  doctor: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true }, // Doctor being reviewed
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true }, // User who wrote the review
+  doctor: { type: mongoose.Schema.Types.ObjectId, ref: 'doctor', required: true }, // Doctor being reviewed
   rating: { type: Number, required: true, min: 1, max: 5 }, // Overall rating (1-5 stars)
   comment: { type: String, maxlength: 500 }, // Optional comment
   hashtags: [{ 
@@ -16,7 +16,7 @@ const DoctorReviewSchema = new mongoose.Schema({
   communicationSkills: { type: Number, min: 1, max: 5 }, // Doctor's communication skills
   punctuality: { type: Number, min: 1, max: 5 }, // Punctuality in appointments
   experienceAndExpertise: { type: Number, min: 1, max: 5 }, // Doctor's experience and expertise
-  likes:[{type:mongoose.Schema.Types.ObjectId,ref:'User'}],
+  likes:[{type:mongoose.Schema.Types.ObjectId,ref:'user'}],
   createdAt: { type: Date, default: Date.now }, // Timestamp of the review
 });
 

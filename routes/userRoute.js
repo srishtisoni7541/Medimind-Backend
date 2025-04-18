@@ -25,22 +25,22 @@ userRouter.post('/cancel-appointment', authUser, cancelAppointment)
 userRouter.post('/payment-razorpay', authUser, paymentRazorpay)
 userRouter.post('/verifyRazorpay', authUser, verifyRazorpay)
 
-userRouter.get("/", authUser,getuser);
+userRouter.get("/user", authUser,getuser);
 userRouter.get(
-  "/:doctorId",
+  "/save/:doctorId",
   authUser,
  savedDoctor
 );
 
-userRouter.get(
-  "/:hospitalId",
-  authUser,
- savedHospital
-);
+// userRouter.get(
+//   "/:hospitalId",
+//   authUser,
+//  savedHospital
+// );
 userRouter.get('/get-hospital', authUser, getHospitals);
 userRouter.get('/get-hospital/:hospitalId', getHospitalById);
 userRouter.get('/find-hospitals', searchHospitals);
-userRouter.get('/delete/:id', authUser, deleteHospital);
+// userRouter.get('/delete/:id', authUser, deleteHospital);
 userRouter.get('/get-doctor',authUser,getDoctors);
 userRouter.get('/get-doctor/:doctorId',getDoctorById);
 userRouter.get('/find-doctor',searchDoctors);

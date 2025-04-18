@@ -118,7 +118,7 @@ const getuser = async (req, res) => {
             path: 'docreviews',
             populate: {
               path: 'doctor',
-              model: 'Doctor'
+              model: 'doctor'
             }
           })
           .populate('savedHospitals')

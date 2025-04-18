@@ -11,7 +11,7 @@ const userSchema = new mongoose.Schema({
       phone: { type: String, default: '0000000000' },
       docreviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'DoctorReview' }],
       hosreviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'HospitalReview' }],
-      savedDoctors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' }],
+      savedDoctors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'doctor' }],
       savedHospitals: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Hospital' }],
 })
 

@@ -9,7 +9,7 @@ const HospitalSchema = new mongoose.Schema({
   specialties: [{ type: String }],
   address: { type: String },
   rating: { type: Number, default: 0 }, // Average rating
-  doctors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' }],
+  doctors: [{ type: mongoose.Schema.Types.ObjectId, ref: 'doctor' }],
   reviews: [{ type: mongoose.Schema.Types.ObjectId, ref: 'HospitalReview' }], // Reference to hospital reviews
   operatingHours: {type:String}, // Available appointment slots
   providesUrgentCare: { type: Boolean, default: false }, // Emergency care option

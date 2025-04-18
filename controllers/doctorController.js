@@ -36,6 +36,7 @@ export const getDoctorById = async (req, res) => {
 };
 
 export const searchDoctors = async (req, res) => {
+      
   try {
     const { specialty, rating, providesUrgentCare, name, hospital } = req.query;
     let query = {};
