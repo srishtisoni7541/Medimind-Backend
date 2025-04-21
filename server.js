@@ -20,7 +20,8 @@ connectCloudinary()
 
 app.use(express.json())
 
-const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
+// const allowedOrigins = ['http://localhost:5173', 'http://localhost:5174'];
+const allowedOrigins = ['https://medimindv1.vercel.app/', 'https://medimind-admin.vercel.app/'];
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl)
