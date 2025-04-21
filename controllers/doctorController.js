@@ -2,7 +2,7 @@ import doctorModel from '../models/doctorModel.js'
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import appointmentModel from '../models/appointmentModel.js'
-
+import prescriptionModel from '../models/prescription.js'
 import Hospital from '../models/hospital.js';
 import User from '../models/userModel.js';
 
@@ -211,6 +211,185 @@ const updateDoctorProfile = async (req, res) => {
       }
 }
 
+
+export const createPrescription = async (req, res) => {
+      try {
+        const { 
+          appointmentId, 
+          doctorId, 
+          patientId, 
+          medications, 
+          diagnosis, 
+          notes 
+        } = req.body
+        
+        // Verify appointment exists and belongs to this doctor
+        const appointment = await appointmentModel.findById(appointmentId)
+        
+        if (!appointment) {
+          return res.status(404).json({ 
+            success: false, 
+            message: "Appointment not found" 
+          })
+        }
+        
+        if (appointment.docId.toString() !== doctorId.toString()) {
+          return res.status(403).json({ 
+            success: false, 
+            message: "Not authorized to create prescription for this appointment" 
+          })
+        }
+        
+        // Check if appointment is completed
+        if (!appointment.isCompleted) {
+          return res.status(400).json({ 
+            success: false, 
+            message: "Cannot create prescription for incomplete appointment" 
+          })
+        }
+        
+        // Check if prescription already exists
+        const existingPrescription = await prescriptionModel.findOne({ appointmentId })
+        if (existingPrescription) {
+          return res.status(400).json({ 
+            success: false, 
+            message: "Prescription already exists for this appointment" 
+          })
+        }
+        
+        // Create new prescription
+        const newPrescription = new prescriptionModel({
+          appointmentId,
+          doctorId,
+          patientId,
+          medications,
+          diagnosis,
+          notes
+        })
+        
+        await newPrescription.save()
+        
+        res.status(201).json({ 
+          success: true, 
+          message: "Prescription created successfully",
+          data: newPrescription
+        })
+        
+      } catch (error) {
+        console.log(error)
+        res.status(500).json({ success: false, message: error.message })
+      }
+    }
+    
+    // Get prescription by appointment ID
+    export const getPrescriptionByAppointment = async (req, res) => {
+      try {
+        const { appointmentId } = req.params
+        
+        const prescription = await prescriptionModel.findOne({ appointmentId })
+          .populate('doctorId', 'name speciality')
+          .populate('patientId', 'name email')
+        
+        if (!prescription) {
+          return res.status(404).json({ 
+            success: false, 
+            message: "Prescription not found" 
+          })
+        }
+        
+        res.status(200).json({ 
+          success: true, 
+          data: prescription 
+        })
+        
+      } catch (error) {
+        console.log(error)
+        res.status(500).json({ success: false, message: error.message })
+      }
+    }
+    
+    // Update existing prescription
+    export const updatePrescription = async (req, res) => {
+      try {
+        const { prescriptionId } = req.params
+        const { 
+          medications, 
+          diagnosis, 
+          notes 
+        } = req.body
+        
+        const prescription = await prescriptionModel.findById(prescriptionId)
+        
+        if (!prescription) {
+          return res.status(404).json({ 
+            success: false, 
+            message: "Prescription not found" 
+          })
+        }
+        
+      
+        // Update prescription
+        prescription.medications = medications || prescription.medications
+        prescription.diagnosis = diagnosis || prescription.diagnosis
+        prescription.notes = notes || prescription.notes
+        prescription.updatedAt = Date.now()
+        
+        await prescription.save()
+        
+        res.status(200).json({ 
+          success: true, 
+          message: "Prescription updated successfully",
+          data: prescription
+        })
+        
+      } catch (error) {
+        console.log(error)
+        res.status(500).json({ success: false, message: error.message })
+      }
+    }
+    
+    // Get all prescriptions for a patient
+    export const getPatientPrescriptions = async (req, res) => {
+      try {
+        const { patientId } = req.params
+        
+        const prescriptions = await prescriptionModel.find({ patientId })
+          .populate('doctorId', 'name speciality')
+          .populate('appointmentId')
+          .sort({ createdAt: -1 })
+        
+        res.status(200).json({ 
+          success: true, 
+          data: prescriptions 
+        })
+        
+      } catch (error) {
+        console.log(error)
+        res.status(500).json({ success: false, message: error.message })
+      }
+    }
+    
+    // Get all prescriptions created by a doctor
+    export const getDoctorPrescriptions = async (req, res) => {
+      try {
+        const { doctorId } = req.params
+        
+        const prescriptions = await prescriptionModel.find({ doctorId })
+          .populate('patientId', 'name email')
+          .populate('appointmentId')
+          .sort({ createdAt: -1 })
+        
+        res.status(200).json({ 
+          success: true, 
+          data: prescriptions 
+        })
+        
+      } catch (error) {
+        console.log(error)
+        res.status(500).json({ success: false, message: error.message })
+      }
+    }
+
 export {
       changeAvailability,
       doctorList,
@@ -220,5 +399,6 @@ export {
       appointmentCancel,
       doctorDashboard,
       doctorProfile,
-      updateDoctorProfile
+      updateDoctorProfile,
+     
 }
