@@ -1,7 +1,7 @@
 import express from 'express'
 import { bookAppointment, cancelAppointment, getProfile, listAppointment, loginUser, paymentRazorpay, registerUser, updateProfile, verifyRazorpay, getuser,savedDoctor,savedHospital} from '../controllers/userController.js'
 import {getDoctorById,getDoctors,searchDoctors} from '../controllers/doctorController.js'
-import { getPatientPrescriptions } from '../controllers/doctorController.js'
+import { getAllPrescriptions,getPrescriptionById } from '../controllers/doctorController.js'
 import authUser from '../middlewares/authUser.js'
 import upload from '../middlewares/multer.js'
 import { 
@@ -31,7 +31,6 @@ userRouter.get(
   authUser,
  savedDoctor
 );
-userRouter.get('/prescriptions/:patientId', authUser, getPatientPrescriptions)
 // userRouter.get(
 //   "/:hospitalId",
 //   authUser,
@@ -44,4 +43,7 @@ userRouter.get('/find-hospitals', searchHospitals);
 userRouter.get('/get-doctor',authUser,getDoctors);
 userRouter.get('/get-doctor/:doctorId',getDoctorById);
 userRouter.get('/find-doctor',searchDoctors);
+
+userRouter.get('/prescriptions', authUser, getAllPrescriptions);
+userRouter.get('/prescriptions/:id', authUser, getPrescriptionById);
 export default userRouter

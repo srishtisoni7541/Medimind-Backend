@@ -348,26 +348,7 @@ export const createPrescription = async (req, res) => {
       }
     }
     
-    // Get all prescriptions for a patient
-    export const getPatientPrescriptions = async (req, res) => {
-      try {
-        const { patientId } = req.params
-        
-        const prescriptions = await prescriptionModel.find({ patientId })
-          .populate('doctorId', 'name speciality')
-          .populate('appointmentId')
-          .sort({ createdAt: -1 })
-        
-        res.status(200).json({ 
-          success: true, 
-          data: prescriptions 
-        })
-        
-      } catch (error) {
-        console.log(error)
-        res.status(500).json({ success: false, message: error.message })
-      }
-    }
+   
     
     // Get all prescriptions created by a doctor
     export const getDoctorPrescriptions = async (req, res) => {
@@ -389,6 +370,68 @@ export const createPrescription = async (req, res) => {
         res.status(500).json({ success: false, message: error.message })
       }
     }
+    export const getAllPrescriptions = async (req, res) => {
+      try {
+        const userId = req.user._id;
+        
+        const prescriptions = await prescriptionModel.find({ patientId: userId })
+          .populate('doctorId', 'firstName lastName specialization')
+          .populate('appointmentId', 'date time')
+          .sort({ createdAt: -1 });
+        
+        res.status(200).json({
+          success: true,
+          prescriptions
+        });
+      } catch (error) {
+        console.error('Error fetching prescriptions:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Failed to fetch prescriptions',
+          error: error.message
+        });
+      }
+    };
+    
+    // Get a specific prescription by ID
+    export const getPrescriptionById = async (req, res) => {
+      try {
+        const { id } = req.params;
+        const userId = req.user._id;
+        
+      
+        const prescription = await prescriptionModel.findById(id)
+          .populate('doctorId', 'firstName lastName specialization profileImage')
+          .populate('appointmentId', 'date time');
+        
+        if (!prescription) {
+          return res.status(404).json({
+            success: false,
+            message: 'Prescription not found'
+          });
+        }
+        
+        // Ensure user can only view their own prescriptions
+        if (prescription.patientId.toString() !== userId.toString()) {
+          return res.status(403).json({
+            success: false,
+            message: 'Unauthorized to view this prescription'
+          });
+        }
+        
+        res.status(200).json({
+          success: true,
+          prescription
+        });
+      } catch (error) {
+        console.error('Error fetching prescription:', error);
+        res.status(500).json({
+          success: false,
+          message: 'Failed to fetch prescription',
+          error: error.message
+        });
+      }
+    };
 
 export {
       changeAvailability,
