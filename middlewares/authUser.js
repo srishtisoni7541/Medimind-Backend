@@ -4,7 +4,8 @@ const authUser = async (req, res, next) => {
     console.log("running");
     try {
         const token = req.headers.utoken;
-        console.log(token);
+    
+        console.log(token,"token");
         if (!token) {
             return res.status(403).json({ success: false, message: "Not Authorized. Login Again" });
         }
@@ -14,8 +15,8 @@ const authUser = async (req, res, next) => {
         
         req.body.userId = decoded.id
         const userData = await User.findById(decoded.id);
+        
         req.user = userData;
-        console.log(req.user,"req.user");
         
         next();
     } catch (error) {
