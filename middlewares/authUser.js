@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/userModel.js'
 const authUser = async (req, res, next) => {
-    console.log("running");
     try {
+        
+        
         const token = req.headers.utoken;
     
         console.log(token,"token");

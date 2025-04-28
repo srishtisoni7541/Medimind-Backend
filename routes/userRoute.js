@@ -15,15 +15,15 @@ import {
 
 const userRouter = express.Router()
 
-userRouter.post('/register', registerUser)
-userRouter.post('/login', loginUser)
-userRouter.get('/get-profile', authUser, getProfile)
-userRouter.post('/update-profile', upload.single('image'), authUser, updateProfile)
-userRouter.post('/book-appointment', authUser, bookAppointment)
-userRouter.get('/appointments', authUser, listAppointment)
-userRouter.post('/cancel-appointment', authUser, cancelAppointment)
-userRouter.post('/payment-razorpay', authUser, paymentRazorpay)
-userRouter.post('/verifyRazorpay', authUser, verifyRazorpay)
+userRouter.post('/user/register', registerUser)
+userRouter.post('/user/login', loginUser)
+userRouter.get('/user/get-profile', authUser, getProfile)
+userRouter.post('/user/update-profile', upload.single('image'), authUser, updateProfile)
+userRouter.post('/user/book-appointment', authUser, bookAppointment)
+userRouter.get('/user/appointments', authUser, listAppointment)
+userRouter.post('/user/cancel-appointment', authUser, cancelAppointment)
+userRouter.post('/user/payment-razorpay', authUser, paymentRazorpay)
+userRouter.post('/user/verifyRazorpay', authUser, verifyRazorpay)
 
 userRouter.get("/user", authUser,getuser);
 userRouter.get(
@@ -36,14 +36,14 @@ userRouter.get(
 //   authUser,
 //  savedHospital
 // );
-userRouter.get('/get-hospital', authUser, getHospitals);
-userRouter.get('/get-hospital/:hospitalId', getHospitalById);
-userRouter.get('/find-hospitals', searchHospitals);
-// userRouter.get('/delete/:id', authUser, deleteHospital);
-userRouter.get('/get-doctor',authUser,getDoctors);
-userRouter.get('/get-doctor/:doctorId',getDoctorById);
-userRouter.get('/find-doctor',searchDoctors);
+userRouter.get('/user/get-hospital', authUser, getHospitals);
+userRouter.get('/user/get-hospital/:hospitalId', getHospitalById);
+userRouter.get('/user/find-hospitals', searchHospitals);
+// userRouter.get('/user/delete/:id', authUser, deleteHospital);
+userRouter.get('/user/get-doctor',authUser,getDoctors);
+userRouter.get('/user/get-doctor/:doctorId',getDoctorById);
+userRouter.get('/user/find-doctor',searchDoctors);
 
-userRouter.get('/prescriptions', authUser, getAllPrescriptions);
-userRouter.get('/prescriptions/:id', authUser, getPrescriptionById);
+userRouter.get('/user/prescriptions', authUser, getAllPrescriptions);
+userRouter.get('/user/prescriptions/:id', authUser, getPrescriptionById);
 export default userRouter
