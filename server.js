@@ -11,6 +11,7 @@ import HospitalReview from './routes/hospitalReviewRoutes.js'
 import  medicalRoutes from './routes/medicalRoutes.js'
 import medicationRoutes from './routes/medicationRoutes.js'
 import dietRoutes from './routes/dietRoutes.js';
+import donationRoutes from './routes/donationRoutes.js';
 
 import helmet  from 'helmet'
 const app = express()
@@ -49,6 +50,7 @@ app.use('/api/hospital-reviews',HospitalReview)
 app.use('/api', medicalRoutes);
 app.use('/api/medications', medicationRoutes);
 app.use('/api', dietRoutes);
+app.use('/api/donations', donationRoutes);
 app.get('/', (req, res) => {
       res.send('API WORKING')
 })
