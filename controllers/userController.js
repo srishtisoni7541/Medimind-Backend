@@ -5,12 +5,14 @@ import userModel from '../models/userModel.js'
 import { v2 as cloudinary } from 'cloudinary'
 import doctorModel from '../models/doctorModel.js'
 import appointmentModel from '../models/appointmentModel.js'
+import { OAuth2Client } from 'google-auth-library';
 import razorpay from 'razorpay'
 // import Doctor from "../models/doctorModel.js"
 import Hospital from "../models/hospital.js"
 import HospitalReview from "../models/hospitalReview.js"
 import DoctorReview from "../models/doctorReview.js"
 
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const registerUser = async (req, res) => {
       try {
@@ -37,7 +39,7 @@ const registerUser = async (req, res) => {
             const newUser = new userModel(userData)
             const user = await newUser.save()
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
-            res.json({ success: true, token })
+            res.json({ success: true, token ,user})
       } catch (error) {
             console.log(error)
             res.json({ success: false, message: error.message })
@@ -57,7 +59,7 @@ const loginUser = async (req, res) => {
 
             if (isMatch) {
                   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
-                  res.json({ success: true, token })
+                  res.json({ success: true, token,user })
             }
             else {
                   res.json({ success: false, message: "Invalid Credentials" })
@@ -68,11 +70,63 @@ const loginUser = async (req, res) => {
             res.json({ success: false, message: error.message })
       }
 }
-
+export const googleAuth = async (req, res) => {
+      try {
+        const { idToken, mode } = req.body;
+        console.log(req.body);
+        
+        // Verify Google token with explicit options
+        const ticket = await client.verifyIdToken({
+          idToken,
+          audience: process.env.GOOGLE_CLIENT_ID,  // Use only the environment variable
+          // Don't provide a fallback here as it may cause mismatch
+        });
+        
+        const { email_verified, name, email} = ticket.getPayload();
+        
+        if (!email_verified) {
+          return res.json({ success: false, message: "Google email not verified" });
+        }
+    
+        // Find if user exists
+        let user = await userModel.findOne({ email });
+        
+        if (!user) {
+          // If in login mode but user doesn't exist
+          if (mode.toLowerCase() === 'login') {
+            return res.json({ success: false, message: "No account found with this Google email" });
+          }
+          
+          // Create new user for signup mode
+          const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+          const salt = await bcrypt.genSalt(10);
+          const hashedPassword = await bcrypt.hash(randomPassword, salt);
+          
+          const userData = {
+            name,
+            email,
+            password: hashedPassword,
+          };
+          
+          const newUser = new userModel(userData);
+          user = await newUser.save();
+        }
+        
+        // Generate token
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET);
+        res.json({ success: true, token });
+        
+      } catch (error) {
+        console.error("Google Auth Error:", error);
+        res.status(400).json({ success: false, message: "Failed to authenticate with Google" });
+      }
+    };
 const getProfile = async (req, res) => {
       try {
-            const { userId } = req.body
+            const { userId } = req.body;
+            console.log(userId);
             const userData = await userModel.findById(userId).select('-password');
+            console.log(userData);
             res.json({ success: true, userData })
       } catch (error) {
             console.log(error)

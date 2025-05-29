@@ -1,15 +1,11 @@
 import CheckupSession from '../models/CheckupSession.js';
-import {
-  analyzeSymptoms as analyzeGeminiSymptoms,
-  getConditionDetails,
-  getTreatmentOptions
-} from '../services/geminiService.js';
+import * as geminiService from '../services/geminiService.js';
 
 // Analyze symptoms using Gemini AI
 export const analyzeSymptoms = async (req, res) => {
   try {
     const { symptoms } = req.body;
-    const analysis = await analyzeGeminiSymptoms(symptoms);
+    const analysis = await geminiService.analyzeSymptoms(symptoms);
     res.json({ conditions: analysis });
   } catch (error) {
     console.error('Error analyzing symptoms:', error);
@@ -18,15 +14,15 @@ export const analyzeSymptoms = async (req, res) => {
 };
 
 // Get detailed information about a condition
-export const getConditionDetailsController = async (req, res) => {
+export const getConditionDetails = async (req, res) => {
   try {
+    const { id } = req.params;
     const { condition } = req.query;
-
     if (!condition) {
       return res.status(400).json({ message: 'Please provide condition name' });
     }
-
-    const details = await getConditionDetails(condition);
+    // Use Gemini AI to get condition details
+    const details = await geminiService.getConditionDetails(condition);
     res.status(200).json(details);
   } catch (error) {
     console.error('Error getting condition details:', error);
@@ -37,13 +33,13 @@ export const getConditionDetailsController = async (req, res) => {
 // Get treatment options for a condition
 export const getTreatments = async (req, res) => {
   try {
+    const { id } = req.params;
     const { condition } = req.query;
-
     if (!condition) {
       return res.status(400).json({ message: 'Please provide condition name' });
     }
-
-    const treatments = await getTreatmentOptions(condition);
+    // Use Gemini AI to get treatment options
+    const treatments = await geminiService.getTreatmentOptions(condition);
     res.status(200).json(treatments);
   } catch (error) {
     console.error('Error getting treatment options:', error);
@@ -51,14 +47,15 @@ export const getTreatments = async (req, res) => {
   }
 };
 
-// Save the checkup session data
+// Save the checkup session data (optional)
 export const saveCheckupSession = async (req, res) => {
   try {
     const sessionData = req.body;
-
+    
+    // Create a new session
     const session = new CheckupSession(sessionData);
     await session.save();
-
+    
     res.status(201).json({ message: 'Session saved successfully', sessionId: session._id });
   } catch (error) {
     console.error('Error saving session:', error);
