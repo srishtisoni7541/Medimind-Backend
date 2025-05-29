@@ -27,7 +27,8 @@ const allowedOrigins = [
   'http://localhost:5174',
   'https://medimind-azure.vercel.app',    
   'https://medimind-admin.vercel.app',
-  'https://medimind-frontend.vercel.app'   
+  'https://medimind-frontend.vercel.app',
+  'https://medimind-admin-three.vercel.app' 
 ];
 app.use(cors({
   origin: allowedOrigins,
