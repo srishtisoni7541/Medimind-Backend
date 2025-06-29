@@ -1,13 +1,9 @@
 import dotenv from 'dotenv';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
 dotenv.config();
 
-// Initialize Generative AI with API key
-const API_KEY = process.env.GEMINI_API_KEY;
-const genAI = new GoogleGenerativeAI(API_KEY);
-
-// Helper function to structure the prompt for generating follow-up questions
+import { GoogleGenerativeAI } from '@google/generative-ai';
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const createFollowUpQuestionsPrompt = (age, sex, symptoms) => {
   return `
     You are a medical assistant tasked with collecting additional information about a patient's symptoms.
@@ -38,14 +34,16 @@ const createFollowUpQuestionsPrompt = (age, sex, symptoms) => {
   `;
 };
 
-// Helper function to structure the prompt for symptom analysis with follow-up answers
 const createSymptomAnalysisPrompt = (age, sex, symptoms, followUpAnswers) => {
-  // Format the follow-up Q&A for the prompt
-  const followUpSection = followUpAnswers && followUpAnswers.length > 0 
-    ? `\nAdditional Information from Follow-up Questions:\n${followUpAnswers.map(qa => 
-      `- Question: ${qa.question}\n  Answer: ${qa.answer}`
-    ).join('\n')}`
-    : '';
+  const followUpSection =
+    followUpAnswers && followUpAnswers.length > 0
+      ? `\nAdditional Information from Follow-up Questions:\n${followUpAnswers
+          .map(
+            (qa) =>
+              `- Question: ${qa.question}\n  Answer: ${qa.answer}`
+          )
+          .join('\n')}`
+      : '';
 
   return `
     You are a medical symptom analyzer. Based on the following patient information, analyze the symptoms 
@@ -72,7 +70,6 @@ const createSymptomAnalysisPrompt = (age, sex, symptoms, followUpAnswers) => {
   `;
 };
 
-// Helper function to structure the prompt for condition details
 const createConditionDetailsPrompt = (condition) => {
   return `
     You are a medical information provider. Please provide detailed information about the following medical condition:
@@ -90,7 +87,6 @@ const createConditionDetailsPrompt = (condition) => {
   `;
 };
 
-// Helper function to structure the prompt for treatment options
 const createTreatmentOptionsPrompt = (condition) => {
   return `
     You are a medical information provider. Please provide treatment options for the following medical condition:
@@ -112,109 +108,138 @@ const createTreatmentOptionsPrompt = (condition) => {
   `;
 };
 
-// Extract JSON from the Gemini response
+const createMedicationSuggestionsPrompt = (partialName) => {
+  return `
+    As a medical AI assistant, provide a list of 5 common medication names that start with or closely match: "${partialName}".
+    Return only the medication names in a JSON array format. For example: ["Medication1", "Medication2", "Medication3", "Medication4", "Medication5"]
+  `;
+};
+
+const createMedicationDetailsPrompt = (medicationName) => {
+  return `
+    Provide comprehensive information about the medication "${medicationName}" in JSON format with the following structure:
+    {
+      "name": "Full medication name",
+      "uses": ["List of common uses"],
+      "sideEffects": ["List of common side effects"],
+      "warnings": ["List of warnings and precautions"],
+      "missedDose": "Instructions for missed dose",
+      "overdose": "Instructions for overdose",
+      "description": "Brief description of the medication"
+    }
+
+    Ensure the information is factual, comprehensive but concise, and formatted exactly as requested.
+  `;
+};
+
+// ------------------------------
+// Helper to extract JSON
+// ------------------------------
+
 const extractJsonFromResponse = (responseText) => {
   try {
-    // Find the JSON part of the response (might be wrapped in markdown code blocks)
     const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```|(\{[\s\S]*\})/);
-    
+
     if (jsonMatch) {
       const jsonString = jsonMatch[1] || jsonMatch[2];
       return JSON.parse(jsonString.trim());
     }
-    
-    // If no code block found, try to parse the entire response
+
     return JSON.parse(responseText.trim());
   } catch (error) {
-    console.error('Error extracting JSON from response:', error);
-    throw new Error('Failed to parse AI response');
+    console.error("Error extracting JSON from response:", error);
+    throw new Error("Failed to parse AI response");
   }
 };
+const callGemini = async (prompt, retries = 3) => {
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-// Generate follow-up questions based on initial symptoms
+  for (let i = 0; i < retries; i++) {
+    try {
+      const result = await model.generateContent(prompt);
+      return result.text();
+    } catch (error) {
+      if (error.status === 429 && i < retries - 1) {
+        console.warn(`Gemini rate limit hit. Retrying in 60s... (${i + 1}/${retries})`);
+        await delay(60000);
+      } else if (error.status === 429) {
+        throw new Error("Gemini API quota exceeded. Please try again later.");
+      } else {
+        throw error;
+      }
+    }
+  }
+};
 export const generateFollowUpQuestions = async (age, sex, symptoms) => {
   try {
-    // Get the generative model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-    
-    // Create the prompt
     const prompt = createFollowUpQuestionsPrompt(age, sex, symptoms);
-    
-    // Generate content
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const responseText = response.text();
-    
-    // Extract and return the JSON part
+    const responseText = await callGemini(prompt);
     return extractJsonFromResponse(responseText);
   } catch (error) {
-    console.error('Error in Gemini service (generateFollowUpQuestions):', error);
+    console.error("Error in Gemini service (generateFollowUpQuestions):", error);
     throw error;
   }
 };
 
-// Analyze symptoms using Gemini AI
 export const analyzeSymptoms = async (age, sex, symptoms, followUpAnswers = []) => {
   try {
-    // Get the generative model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-    
-    // Create the prompt
     const prompt = createSymptomAnalysisPrompt(age, sex, symptoms, followUpAnswers);
-    
-    // Generate content
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const responseText = response.text();
-    
-    // Extract and return the JSON part
+    const responseText = await callGemini(prompt);
     return extractJsonFromResponse(responseText);
   } catch (error) {
-    console.error('Error in Gemini service (analyzeSymptoms):', error);
+    console.error("Error in Gemini service (analyzeSymptoms):", error);
     throw error;
   }
 };
 
-// Get details about a condition using Gemini AI
 export const getConditionDetails = async (condition) => {
   try {
-    // Get the generative model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-    
-    // Create the prompt
     const prompt = createConditionDetailsPrompt(condition);
-    
-    // Generate content
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const responseText = response.text();
-    
-    // Extract and return the JSON part
+    const responseText = await callGemini(prompt);
     return extractJsonFromResponse(responseText);
   } catch (error) {
-    console.error('Error in Gemini service (getConditionDetails):', error);
+    console.error("Error in Gemini service (getConditionDetails):", error);
     throw error;
   }
 };
 
-// Get treatment options for a condition using Gemini AI
 export const getTreatmentOptions = async (condition) => {
   try {
-    // Get the generative model
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-    
-    // Create the prompt
     const prompt = createTreatmentOptionsPrompt(condition);
-    
-    // Generate content
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const responseText = response.text();
-    
-    // Extract and return the JSON part
+    const responseText = await callGemini(prompt);
     return extractJsonFromResponse(responseText);
   } catch (error) {
-    console.error('Error in Gemini service (getTreatmentOptions):', error);
+    console.error("Error in Gemini service (getTreatmentOptions):", error);
+    throw error;
+  }
+};
+
+export const getMedicationSuggestions = async (partialName) => {
+  try {
+    const prompt = createMedicationSuggestionsPrompt(partialName);
+    const responseText = await callGemini(prompt);
+    const jsonMatch = responseText.match(/\[([\s\S]*?)\]/);
+    if (jsonMatch && jsonMatch[0]) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    return [];
+  } catch (error) {
+    console.error("Error in Gemini service (getMedicationSuggestions):", error);
+    throw error;
+  }
+};
+
+export const getMedicationDetails = async (medicationName) => {
+  try {
+    const prompt = createMedicationDetailsPrompt(medicationName);
+    const responseText = await callGemini(prompt);
+    const jsonMatch = responseText.match(/({[\s\S]*})/);
+    if (jsonMatch && jsonMatch[1]) {
+      return JSON.parse(jsonMatch[1]);
+    }
+    throw new Error("Failed to parse medication details");
+  } catch (error) {
+    console.error("Error in Gemini service (getMedicationDetails):", error);
     throw error;
   }
 };
