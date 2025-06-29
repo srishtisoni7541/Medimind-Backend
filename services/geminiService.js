@@ -180,7 +180,7 @@ export const generateFollowUpQuestions = async (age, sex, symptoms) => {
     throw error;
   }
 };
-
+                                                                    
 export const analyzeSymptoms = async (age, sex, symptoms, followUpAnswers = []) => {
   try {
     const prompt = createSymptomAnalysisPrompt(age, sex, symptoms, followUpAnswers);
