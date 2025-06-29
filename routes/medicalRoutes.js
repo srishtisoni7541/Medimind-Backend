@@ -102,3 +102,5 @@ router.get('/treatments/:conditionName', async (req, res) => {
 router.post('/save-session', medicalController.saveCheckupSession);
 
 export default router;
+
+
